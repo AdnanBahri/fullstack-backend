@@ -21,8 +21,8 @@ class Category(MPTTModel):
         max_length=255,
         unique=True,
     )
-    slug = models.SlugField(verbose_name=_(
-        "Category safe URL"), max_length=255, unique=True)
+    # slug = models.SlugField(verbose_name=_(
+    #     "Category safe URL"), max_length=255, unique=True)
     parent = TreeForeignKey("self", on_delete=models.CASCADE,
                             null=True, blank=True, related_name="children")
     is_active = models.BooleanField(default=True)
@@ -73,6 +73,52 @@ class ProductType(models.Model):
         return self.name
 
 
+class Specification(models.Model):
+    """
+    The Product Specification Table contains product
+    specifiction or features for the product types.
+    """
+
+    name = models.CharField(
+        verbose_name=_("Name"),
+        help_text=_("Required"),
+        max_length=255
+    )
+
+    # product_type = models.ManyToManyField(
+    #     ProductType, related_name="specifications")
+
+    class Meta:
+        verbose_name = _("Product Specification")
+        verbose_name_plural = _("Product Specifications")
+
+    def __str__(self):
+        return self.name
+
+
+class SpecificationValue(models.Model):
+    """
+    The Product Specification Value table holds each of the
+    products individual specification or bespoke features.
+    """
+
+    # specification = models.ForeignKey(
+    #     ProductSpecification, on_delete=models.CASCADE)
+    value = models.CharField(
+        verbose_name=_("value"),
+        help_text=_("Product specification value (maximum of 255 words"),
+        max_length=255,
+    )
+    specification = models.ForeignKey(Specification, on_delete=models.CASCADE, related_name="specification_values", null=True)
+
+    class Meta:
+        verbose_name = _("Product Specification Value")
+        verbose_name_plural = _("Product Specification Values")
+
+    def __str__(self):
+        return self.value
+
+
 class Product(models.Model):
     """
     The Product table contining all product items.
@@ -87,7 +133,7 @@ class Product(models.Model):
         help_text=_("Required"),
         max_length=255,
     )
-
+    specifications = models.ManyToManyField(Specification, related_name = "products")
     description = models.TextField(blank=True)
     type = models.ForeignKey(
         ProductType, on_delete=models.CASCADE, related_name="products")
@@ -122,50 +168,6 @@ class Detail(models.Model):
 
     def __str__(self):
         return f'{self.product.name}, {self.value}'
-
-
-class ProductSpecification(models.Model):
-    """
-    The Product Specification Table contains product
-    specifiction or features for the product types.
-    """
-
-    name = models.CharField(
-        verbose_name=_("Name"),
-        help_text=_("Required"),
-        max_length=255
-    )
-    product_type = models.ManyToManyField(
-        ProductType, related_name="specifications")
-
-    class Meta:
-        verbose_name = _("Product Specification")
-        verbose_name_plural = _("Product Specifications")
-
-    def __str__(self):
-        return self.name
-
-
-class ProductSpecificationValue(models.Model):
-    """
-    The Product Specification Value table holds each of the
-    products individual specification or bespoke features.
-    """
-
-    specification = models.ForeignKey(
-        ProductSpecification, on_delete=models.CASCADE)
-    value = models.CharField(
-        verbose_name=_("value"),
-        help_text=_("Product specification value (maximum of 255 words"),
-        max_length=255,
-    )
-
-    class Meta:
-        verbose_name = _("Product Specification Value")
-        verbose_name_plural = _("Product Specification Values")
-
-    def __str__(self):
-        return self.value
 
 
 class ProductImage(models.Model):
