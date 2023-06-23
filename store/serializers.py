@@ -16,6 +16,7 @@ class SpecificationValueSerializer(serializers.ModelSerializer):
 
 
 class SpecificationSerializer(serializers.ModelSerializer):
+    specification_values = SpecificationValueSerializer(many=True)
     class Meta:
         model = ProductSpecification
         fields = '__all__'
@@ -37,10 +38,11 @@ class ProductTypeSerielizer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     slug = serializers.SlugField(required=False, allow_blank=True)
+    specifications = SpecificationSerializer(many=True)
 
     class Meta:
         model = Product
-        fields = ["id", "category", "name", "is_active", "type", "description",
+        fields = ["id", "category", "name", "is_active", "type", "description", "specifications", "brand",
                   "price", "old_price", "slug", "created_at", "updated_at"]
 
     def create(self, validated_data):

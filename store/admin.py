@@ -11,16 +11,14 @@ from .models import (
     Brand
 )
 
-admin.site.register(Category, MPTTModelAdmin)
-admin.site.register(Brand)
-
 
 class ProductSpecificationInline(admin.TabularInline):
     model = ProductSpecification
 
 
-class ProductSpecificationValueInline(admin.TabularInline):
+class ProductSpecificationValueInline(admin.StackedInline):
     model = ProductSpecificationValue
+    extra = 1
 
 
 class ProductImageInline(admin.TabularInline):
@@ -32,10 +30,6 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [
         ProductImageInline,
     ]
-
-
-@admin.register(ProductType)
-class ProductTypeAdmin(admin.ModelAdmin):
     filter_horizontal = ['specifications']
 
 
@@ -44,3 +38,11 @@ class ProductSpecificationAdmin(admin.ModelAdmin):
     inlines = [
         ProductSpecificationValueInline,
     ]
+
+
+
+admin.site.register(Category, MPTTModelAdmin)
+admin.site.register(Brand)
+admin.site.register(ProductType)
+# admin.site.register(ProductSpecification)
+# admin.site.register(ProductSpecificationValue)
