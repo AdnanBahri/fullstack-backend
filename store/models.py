@@ -21,8 +21,8 @@ class Category(MPTTModel):
         max_length=255,
         unique=True,
     )
-    # slug = models.SlugField(verbose_name=_(
-    #     "Category safe URL"), max_length=255, unique=True)
+    slug = models.SlugField(verbose_name=_(
+        "Category safe URL"), max_length=255, unique=True, blank=True, null=True)
     parent = TreeForeignKey("self", on_delete=models.CASCADE,
                             null=True, blank=True, related_name="children")
     is_active = models.BooleanField(default=True)
@@ -61,6 +61,15 @@ class Brand(models.Model):
         return self.name
 
 
+class ProductColor(models.Model):
+    name = models.CharField(max_length=255)
+    color_code = models.CharField(
+        max_length=255, unique=True, blank=False, null=False)
+
+    def __str__(self):
+        return self.name
+
+
 class ProductType(models.Model):
 
     name = models.CharField(max_length=255, blank=False)
@@ -85,9 +94,6 @@ class Specification(models.Model):
         max_length=255
     )
 
-    # product_type = models.ManyToManyField(
-    #     ProductType, related_name="specifications")
-
     class Meta:
         verbose_name = _("Product Specification")
         verbose_name_plural = _("Product Specifications")
@@ -102,14 +108,13 @@ class SpecificationValue(models.Model):
     products individual specification or bespoke features.
     """
 
-    # specification = models.ForeignKey(
-    #     ProductSpecification, on_delete=models.CASCADE)
     value = models.CharField(
         verbose_name=_("value"),
         help_text=_("Product specification value (maximum of 255 words"),
         max_length=255,
     )
-    specification = models.ForeignKey(Specification, on_delete=models.CASCADE, related_name="specification_values", null=True)
+    specification = models.ForeignKey(
+        Specification, on_delete=models.CASCADE, related_name="specification_values", null=True)
 
     class Meta:
         verbose_name = _("Product Specification Value")
@@ -133,12 +138,11 @@ class Product(models.Model):
         help_text=_("Required"),
         max_length=255,
     )
-    specifications = models.ManyToManyField(Specification, related_name = "products")
     description = models.TextField(blank=True)
     type = models.ForeignKey(
-        ProductType, on_delete=models.CASCADE, related_name="products")
-    price = models.DecimalField(max_digits=5, decimal_places=2)
-    old_price = models.DecimalField(max_digits=5, decimal_places=2)
+        ProductType, on_delete=models.CASCADE, related_name="products", null=True)
+    price = models.DecimalField(
+        max_digits=5, decimal_places=2, blank=True, null=True)
     is_active = models.BooleanField(
         verbose_name=_("Product visibility"),
         help_text=_("Change product visibility"),
@@ -160,6 +164,38 @@ class Product(models.Model):
         return self.name
 
 
+class ProductVariant(models.Model):
+
+    name = models.CharField(max_length=255)
+    color = models.ForeignKey(
+        ProductColor, on_delete=models.CASCADE, related_name="products")
+    specifications = models.ManyToManyField(
+        Specification, related_name="variants")
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="product_variants")
+    price = models.DecimalField(max_digits=5, decimal_places=2)
+    old_price = models.DecimalField(max_digits=5, decimal_places=2)
+    is_active = models.BooleanField(
+        verbose_name=_("Variant visibility"),
+        help_text=_("Change variant visibility"),
+        default=True,
+    )
+    created_at = models.DateTimeField(
+        _("Created at"), auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(_("Updated at"), auto_now=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name = _("Variant")
+        verbose_name_plural = _("Variant")
+
+    def get_absolute_url(self):
+        return reverse("store:variant_detail", args=[self.slug])
+
+    def __str__(self):
+        return self.name
+
+
 class Detail(models.Model):
 
     value = models.CharField(max_length=255, blank=False)
@@ -175,8 +211,10 @@ class ProductImage(models.Model):
     The Product Image table.
     """
 
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name="product_images", null=True)
     variant = models.ForeignKey(
-        Product, on_delete=models.CASCADE, related_name="product_image")
+        ProductVariant, on_delete=models.CASCADE, related_name="variant_images", null=True)
     url = models.ImageField(
         verbose_name=_("url"),
         help_text=_("Upload a product image"),

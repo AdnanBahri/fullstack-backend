@@ -5,19 +5,22 @@ from .models import (
     Category,
     Product,
     ProductImage,
-    ProductSpecification,
-    ProductSpecificationValue,
+    Specification,
+    SpecificationValue,
     ProductType,
-    Brand
+    Brand,
+    Detail,
+    ProductColor,
+    ProductVariant
 )
 
 
-class ProductSpecificationInline(admin.TabularInline):
-    model = ProductSpecification
+class SpecificationInline(admin.TabularInline):
+    model = Specification
 
 
-class ProductSpecificationValueInline(admin.StackedInline):
-    model = ProductSpecificationValue
+class SpecificationValueInline(admin.StackedInline):
+    model = SpecificationValue
     extra = 1
 
 
@@ -25,24 +28,38 @@ class ProductImageInline(admin.TabularInline):
     model = ProductImage
 
 
+class ProductColorInline(admin.TabularInline):
+    model = ProductColor
+
+
+class ProductDetailInline(admin.TabularInline):
+    model = Detail
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
+    inlines = [
+        ProductImageInline,
+    ]
+
+
+@admin.register(Specification)
+class SpecificationAdmin(admin.ModelAdmin):
+    inlines = [
+        SpecificationValueInline,
+    ]
+
+
+@admin.register(ProductVariant)
+class ProductVariantAdmin(admin.ModelAdmin):
     inlines = [
         ProductImageInline,
     ]
     filter_horizontal = ['specifications']
 
 
-@admin.register(ProductSpecification)
-class ProductSpecificationAdmin(admin.ModelAdmin):
-    inlines = [
-        ProductSpecificationValueInline,
-    ]
-
-
-
 admin.site.register(Category, MPTTModelAdmin)
 admin.site.register(Brand)
 admin.site.register(ProductType)
-# admin.site.register(ProductSpecification)
-# admin.site.register(ProductSpecificationValue)
+admin.site.register(Detail)
+admin.site.register(ProductColor)
