@@ -121,7 +121,7 @@ class SpecificationValue(models.Model):
         verbose_name_plural = _("Product Specification Values")
 
     def __str__(self):
-        return self.value
+        return f"{self.specification} - {self.value}"
 
 
 class Product(models.Model):
@@ -170,7 +170,7 @@ class ProductVariant(models.Model):
     color = models.ForeignKey(
         ProductColor, on_delete=models.CASCADE, related_name="products")
     specifications = models.ManyToManyField(
-        Specification, related_name="variants")
+        SpecificationValue, related_name="variants")
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, related_name="product_variants")
     price = models.DecimalField(max_digits=5, decimal_places=2)

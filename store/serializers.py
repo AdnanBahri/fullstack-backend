@@ -10,6 +10,8 @@ class ImageSerializer(serializers.ModelSerializer):
 
 
 class SpecificationValueSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='specification.name')
+    
     class Meta:
         model = SpecificationValue
         fields = '__all__'
@@ -51,11 +53,11 @@ class ProductTypeSerielizer(serializers.ModelSerializer):
 
 class VariantSerializer(serializers.ModelSerializer):
     slug = serializers.SlugField(required=False, allow_blank=True)
-    specifications = SpecificationSerializer(many=True)
+    specifications = SpecificationValueSerializer(many=True)
 
     class Meta:
         model = ProductVariant
-        fields = ["id", "category", "name", "product", "is_active", "specifications", "color",
+        fields = ["id", "name", "product", "is_active", "specifications", "color",
                   "price", "old_price", "slug", "variant_images", "created_at", "updated_at"]
 
     def create(self, validated_data):
@@ -81,11 +83,12 @@ class VariantSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     slug = serializers.SlugField(required=False, allow_blank=True)
+    product_variants = VariantSerializer(many=True)
 
     class Meta:
         model = Product
         fields = ["id", "category", "name", "is_active", "type", "description", "brand",
-                  "price", "slug", "product_images", "created_at", "updated_at"]
+                  "price", "product_variants", "slug", "product_images", "created_at", "updated_at"]
 
     def create(self, validated_data):
         name = validated_data.get('name')
@@ -110,10 +113,22 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     slug = serializers.SlugField(required=False, allow_blank=True)
+    children = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
-        fields = ["name", "slug", "parent"]
+        fields = ["id", "name", "slug", "parent", 'children']
+    
+    def get_children(self, obj):
+        if obj.children.exists():
+            children = [child for child in obj.children.all()]
+            children_with_children = [child for child in children if child.children.exists()]
+            children_without_children = [child for child in children if not child.children.exists()]
+            if children_with_children:
+                return CategorySerializer(children_with_children, many=True).data
+            if children_without_children:
+                return CategorySerializer(children_without_children, many=True).data
+
 
     def create(self, validated_data):
         name = validated_data.get('name')
